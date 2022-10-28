@@ -1,0 +1,7 @@
+[workspace]
+default-members = ["app"]
+members = [
+    "app",
+    "tsa_sim",
+    "graphics_engine",
+]
