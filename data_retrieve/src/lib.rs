@@ -8,7 +8,7 @@ pub struct DataNode {
     pub point: Point,
 }
 
-type Data = Vec<DataNode>;
+pub type Data = Vec<DataNode>;
 
 pub fn load(fp: &'static str) -> Data {
     let mut data = vec![];
