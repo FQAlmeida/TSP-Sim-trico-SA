@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 tsa_sim = {path="../tsa_sim"}
+graphics_engine = {path="../graphics_engine"}

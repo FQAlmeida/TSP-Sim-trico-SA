@@ -1,8 +1,9 @@
-use data_retrieve::{load, Data, Point};
+use data_retrieve::{load, Data, DataNode, Point};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
 pub struct TSA {
     pub distances: Vec<Vec<f64>>,
+    pub data: Vec<DataNode>,
     pub solution: Vec<usize>,
 }
 
@@ -28,23 +29,35 @@ impl TSA {
     pub fn gen_next_solution(&mut self) {
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
-        self.solution = Self::permute(&self.solution, qtd);
+        let initial_size = self.solution.len();
+        Self::permute(&mut self.solution, qtd);
+        assert_eq!(initial_size, self.solution.len());
     }
-    fn permute(solution: &Vec<usize>, qtd: usize) -> Vec<usize> {
+    fn permute(solution: &mut Vec<usize>, qtd: usize) {
         let size = solution.len();
         let mut rng = thread_rng();
-        let mut new_solution = solution.clone();
         for _ in 0..qtd {
-            let index_1: usize = rng.gen_range(0..size);
-            let index_2: usize = rng.gen_range(0..size);
+            let mut index_1: usize;
+            let mut index_2: usize;
+            loop {
+                index_1 = rng.gen_range(0..size);
+                index_2 = rng.gen_range(0..size);
+                if index_1 != index_2 {
+                    break;
+                }
+            }
 
             let value_1 = solution[index_1];
             let value_2 = solution[index_2];
 
-            new_solution[index_1] = value_2;
-            new_solution[index_2] = value_1;
+            solution[index_1] = value_2;
+            solution[index_2] = value_1;
+
+            assert_eq!(value_1, solution[index_2]);
+            assert_eq!(value_2, solution[index_1]);
+            assert_ne!(value_1, value_2);
+            assert_ne!(solution[index_1], solution[index_2]);
         }
-        return new_solution;
     }
 }
 
@@ -54,6 +67,7 @@ impl TSA {
         let initial_solution = Self::get_initial_solution(data.len());
         Self {
             distances,
+            data,
             solution: initial_solution,
         }
     }
@@ -62,11 +76,13 @@ impl TSA {
         let data = load("data/inst_51.txt");
         Self::create(data)
     }
+    
     fn get_initial_solution(len: usize) -> Vec<usize> {
         let mut solution = (0..len).collect::<Vec<usize>>();
         solution.shuffle(&mut thread_rng());
         return solution;
     }
+
     fn euclidian_distance_matrix(data: &Data) -> Vec<Vec<f64>> {
         let mut matrix = vec![vec![0.0; data.len()]; data.len()];
         for item_1 in data {
