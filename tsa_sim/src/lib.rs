@@ -5,6 +5,7 @@ pub struct TSA {
     pub distances: Vec<Vec<f64>>,
     pub data: Vec<DataNode>,
     pub solution: Vec<usize>,
+    current_distance: f64,
 }
 
 fn dist(a: &Point, b: &Point) -> f64 {
@@ -16,26 +17,51 @@ fn dist(a: &Point, b: &Point) -> f64 {
 }
 
 impl TSA {
-    pub fn get_solution_distance(&self) -> f64 {
+    pub fn get_solution_distance(&self, solution: &Vec<usize>) -> f64 {
+        return Self::_get_solution_distance(&self.distances, solution);
+    }
+
+    fn _get_solution_distance(distances: &Vec<Vec<f64>>, solution: &Vec<usize>) -> f64 {
         let mut dist = 0.0;
-        let size = self.solution.len();
+        let size = solution.len();
         for origem_index in 0..size {
-            let origem = self.solution[origem_index];
-            let destiny = self.solution[(origem_index + 1) % size]; // mod size to wrap to the first item
-            dist += self.distances[origem][destiny];
+            let origem = solution[origem_index];
+            let destiny = solution[(origem_index + 1) % size]; // mod size to wrap to the first item
+            dist += distances[origem][destiny];
         }
         return dist;
     }
+
     pub fn gen_next_solution(&mut self) {
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
         let initial_size = self.solution.len();
-        Self::permute(&mut self.solution, qtd);
+        let new_solution = TSA::permute(&mut self.solution.clone(), qtd);
         assert_eq!(initial_size, self.solution.len());
+
+        let new_distance = self.get_solution_distance(&new_solution);
+
+        if new_distance < self.current_distance {
+            self.current_distance = new_distance;
+            self.solution = new_solution;
+            return;
+        }
+
+        // let value = rng.gen_range(0.0..=1.0);
+        // if value <= 0.005 {
+        //     self.current_distance = new_distance;
+        //     self.solution = new_solution;
+        // }
     }
-    fn permute(solution: &mut Vec<usize>, qtd: usize) {
+    fn permute(solution: &mut Vec<usize>, qtd: usize) -> Vec<usize> {
         let size = solution.len();
         let mut rng = thread_rng();
+        let mut new_solution = solution.clone();
+
+        for i in 0..solution.len() {
+            assert_eq!(solution[i], new_solution[i]);
+        }
+
         for _ in 0..qtd {
             let mut index_1: usize;
             let mut index_2: usize;
@@ -47,17 +73,18 @@ impl TSA {
                 }
             }
 
-            let value_1 = solution[index_1];
-            let value_2 = solution[index_2];
+            let value_1 = new_solution[index_1];
+            let value_2 = new_solution[index_2];
 
-            solution[index_1] = value_2;
-            solution[index_2] = value_1;
+            new_solution[index_1] = value_2;
+            new_solution[index_2] = value_1;
 
-            assert_eq!(value_1, solution[index_2]);
-            assert_eq!(value_2, solution[index_1]);
+            assert_eq!(value_1, new_solution[index_2]);
+            assert_eq!(value_2, new_solution[index_1]);
             assert_ne!(value_1, value_2);
-            assert_ne!(solution[index_1], solution[index_2]);
+            assert_ne!(new_solution[index_1], new_solution[index_2]);
         }
+        return new_solution;
     }
 }
 
@@ -65,10 +92,12 @@ impl TSA {
     fn create(data: Data) -> Self {
         let distances = Self::euclidian_distance_matrix(&data);
         let initial_solution = Self::get_initial_solution(data.len());
+        let current_distance = Self::_get_solution_distance(&distances, &initial_solution);
         Self {
             distances,
             data,
             solution: initial_solution,
+            current_distance,
         }
     }
 
@@ -76,7 +105,7 @@ impl TSA {
         let data = load("data/inst_51.txt");
         Self::create(data)
     }
-    
+
     fn get_initial_solution(len: usize) -> Vec<usize> {
         let mut solution = (0..len).collect::<Vec<usize>>();
         solution.shuffle(&mut thread_rng());
