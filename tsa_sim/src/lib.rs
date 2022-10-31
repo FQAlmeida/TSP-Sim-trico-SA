@@ -6,6 +6,9 @@ pub struct TSA {
     pub data: Vec<DataNode>,
     pub solution: Vec<usize>,
     current_distance: f64,
+    temperature: f64,
+    iters_on_temp: usize,
+    qtd_iters_on_temp: usize
 }
 
 fn dist(a: &Point, b: &Point) -> f64 {
@@ -36,24 +39,44 @@ impl TSA {
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
         let initial_size = self.solution.len();
-        let new_solution = TSA::permute(&mut self.solution.clone(), qtd);
+        let new_solution = TSA::permute(&self.solution, qtd);
         assert_eq!(initial_size, self.solution.len());
+        assert_eq!(initial_size, new_solution.len());
 
         let new_distance = self.get_solution_distance(&new_solution);
 
-        if new_distance < self.current_distance {
+        if new_distance < self.current_distance || self.should_change(new_distance) {
             self.current_distance = new_distance;
             self.solution = new_solution;
             return;
         }
 
-        // let value = rng.gen_range(0.0..=1.0);
-        // if value <= 0.005 {
-        //     self.current_distance = new_distance;
-        //     self.solution = new_solution;
-        // }
+        self.update_temperature();
     }
-    fn permute(solution: &mut Vec<usize>, qtd: usize) -> Vec<usize> {
+
+    fn should_change(&mut self, new_distance: f64) -> bool {
+        if self.temperature == 0.0 {
+            return false;
+        }
+        let mut rng = thread_rng();
+        let value = rng.gen_range(0.0..=1.0);
+        let e = std::f64::consts::E;
+        let delta = self.current_distance - new_distance;
+        let prob = e.powf(-delta / self.temperature);
+        dbg!(prob);
+        assert!(0.0 <= prob && prob <= 1.0);
+        return value < prob;
+    }
+
+    fn update_temperature(&mut self) {
+        self.iters_on_temp += 1;
+        if self.iters_on_temp % self.qtd_iters_on_temp != 0 {
+            return;
+        }
+        self.iters_on_temp = 0;
+    }
+
+    fn permute(solution: &Vec<usize>, qtd: usize) -> Vec<usize> {
         let size = solution.len();
         let mut rng = thread_rng();
         let mut new_solution = solution.clone();
@@ -93,11 +116,15 @@ impl TSA {
         let distances = Self::euclidian_distance_matrix(&data);
         let initial_solution = Self::get_initial_solution(data.len());
         let current_distance = Self::_get_solution_distance(&distances, &initial_solution);
+        let initial_temperature = 0.0;
         Self {
             distances,
             data,
             solution: initial_solution,
             current_distance,
+            temperature: initial_temperature,
+            iters_on_temp: 0,
+            qtd_iters_on_temp: 5
         }
     }
 

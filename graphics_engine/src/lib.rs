@@ -21,6 +21,7 @@ pub enum ObjectType {
     CIRCLE,
     LINE,
 }
+
 pub struct Object {
     pos: Vec<(usize, usize)>,
     color: [f32; 4],
