@@ -1,6 +1,13 @@
 use data_retrieve::{load, Data, DataNode, Point};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
+pub struct TSAConfig {
+    pub initial_temperature: f64,
+    pub final_temperature: f64,
+    pub qtd_iters: usize,
+    pub qtd_iters_on_temp: usize,
+}
+
 pub struct TSA {
     pub distances: Vec<Vec<f64>>,
     pub data: Vec<DataNode>,
@@ -8,7 +15,8 @@ pub struct TSA {
     current_distance: f64,
     temperature: f64,
     iters_on_temp: usize,
-    qtd_iters_on_temp: usize
+    current_iter: usize,
+    config: TSAConfig,
 }
 
 fn dist(a: &Point, b: &Point) -> f64 {
@@ -36,6 +44,11 @@ impl TSA {
     }
 
     pub fn gen_next_solution(&mut self) {
+        if self.current_iter >= self.config.qtd_iters {
+            return;
+        }
+        self.current_iter += 1;
+
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
         let initial_size = self.solution.len();
@@ -70,10 +83,17 @@ impl TSA {
 
     fn update_temperature(&mut self) {
         self.iters_on_temp += 1;
-        if self.iters_on_temp % self.qtd_iters_on_temp != 0 {
+        if self.iters_on_temp % self.config.qtd_iters_on_temp != 0 {
             return;
         }
         self.iters_on_temp = 0;
+
+        let delta_temp = self.config.initial_temperature - self.config.final_temperature;
+        let n = self.config.qtd_iters as f64;
+        let a = delta_temp * (n + 1.0) / n;
+        let b = self.config.initial_temperature - a;
+        let new_temp = a / (self.current_iter as f64 + 1.0) + b;
+        self.temperature = new_temp;
     }
 
     fn permute(solution: &Vec<usize>, qtd: usize) -> Vec<usize> {
@@ -111,8 +131,19 @@ impl TSA {
     }
 }
 
+impl TSAConfig {
+    pub fn create_default() -> Self {
+        Self {
+            final_temperature: 0.0001,
+            initial_temperature: 10.0,
+            qtd_iters: 1000000,
+            qtd_iters_on_temp: 10,
+        }
+    }
+}
+
 impl TSA {
-    fn create(data: Data) -> Self {
+    fn create(data: Data, config: TSAConfig) -> Self {
         let distances = Self::euclidian_distance_matrix(&data);
         let initial_solution = Self::get_initial_solution(data.len());
         let current_distance = Self::_get_solution_distance(&distances, &initial_solution);
@@ -124,13 +155,15 @@ impl TSA {
             current_distance,
             temperature: initial_temperature,
             iters_on_temp: 0,
-            qtd_iters_on_temp: 5
+            current_iter: 0,
+            config,
         }
     }
 
     pub fn create_with_data() -> Self {
         let data = load("data/inst_51.txt");
-        Self::create(data)
+        let config = TSAConfig::create_default();
+        Self::create(data, config)
     }
 
     fn get_initial_solution(len: usize) -> Vec<usize> {
