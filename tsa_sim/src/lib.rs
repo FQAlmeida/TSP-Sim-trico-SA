@@ -74,9 +74,11 @@ impl TSA {
         let mut rng = thread_rng();
         let value = rng.gen_range(0.0..=1.0);
         let e = std::f64::consts::E;
-        let delta = self.current_distance - new_distance;
+        let delta = new_distance - self.current_distance;
         let prob = e.powf(-delta / self.temperature);
-        dbg!(prob);
+        println!("{}", prob);
+        println!("{}", delta);
+        println!("{}", self.temperature);
         assert!(0.0 <= prob && prob <= 1.0);
         return value < prob;
     }
@@ -147,7 +149,7 @@ impl TSA {
         let distances = Self::euclidian_distance_matrix(&data);
         let initial_solution = Self::get_initial_solution(data.len());
         let current_distance = Self::_get_solution_distance(&distances, &initial_solution);
-        let initial_temperature = 0.0;
+        let initial_temperature = config.initial_temperature;
         Self {
             distances,
             data,
