@@ -1,3 +1,6 @@
+pub mod cooling_methods;
+
+use cooling_methods::{CoolingMethod, SigmoidCooling};
 use data_retrieve::{load, Data, DataNode, Point};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
@@ -6,6 +9,7 @@ pub struct TSAConfig {
     pub final_temperature: f64,
     pub qtd_iters: usize,
     pub qtd_iters_on_temp: usize,
+    pub cooling_method: Box<dyn CoolingMethod>,
 }
 
 pub struct TSA {
@@ -90,6 +94,8 @@ impl TSA {
         }
         self.iters_on_temp = 0;
 
+        // self.cooling_method
+
         let delta_temp = self.config.initial_temperature - self.config.final_temperature;
         let n = self.config.qtd_iters as f64;
         let a = delta_temp * (n + 1.0) / n;
@@ -140,7 +146,16 @@ impl TSAConfig {
             initial_temperature: 10.0,
             qtd_iters: 1000000,
             qtd_iters_on_temp: 10,
+            cooling_method: Box::new(SigmoidCooling::create(10.0, 0.0001, 1000000)),
         }
+    }
+}
+
+impl TSA {
+    pub fn create_with_data() -> Self {
+        let data = load("data/inst_51.txt");
+        let config = TSAConfig::create_default();
+        Self::create(data, config)
     }
 }
 
@@ -161,13 +176,9 @@ impl TSA {
             config,
         }
     }
+}
 
-    pub fn create_with_data() -> Self {
-        let data = load("data/inst_51.txt");
-        let config = TSAConfig::create_default();
-        Self::create(data, config)
-    }
-
+impl TSA {
     fn get_initial_solution(len: usize) -> Vec<usize> {
         let mut solution = (0..len).collect::<Vec<usize>>();
         solution.shuffle(&mut thread_rng());
