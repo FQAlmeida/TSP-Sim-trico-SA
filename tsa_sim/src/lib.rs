@@ -1,7 +1,7 @@
 pub mod cooling_methods;
 
-use cooling_methods::{CoolingMethod, SigmoidCooling};
-use data_retrieve::{load, Data, DataNode, Point};
+use cooling_methods::{CoolingMethod, Creatable, SigmoidCooling};
+use data_retrieve::{Data, DataNode, Point};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
 pub struct TSAConfig {
@@ -80,9 +80,11 @@ impl TSA {
         let e = std::f64::consts::E;
         let delta = new_distance - self.current_distance;
         let prob = e.powf(-delta / self.temperature);
-        println!("{}", prob);
-        println!("{}", delta);
-        println!("{}", self.temperature);
+        println!("-------------------------------------");
+        println!("prob {}", prob);
+        println!("distance {}", delta);
+        println!("temp {}", self.temperature);
+        println!("-------------------------------------");
         assert!(0.0 <= prob && prob <= 1.0);
         return value < prob;
     }
@@ -141,26 +143,38 @@ impl TSA {
 
 impl TSAConfig {
     pub fn create_default() -> Self {
+        let final_temperature = 0.0001;
+        let initial_temperature = 10.0;
+        let qtd_iters = 1000000;
+        let qtd_iters_on_temp = 10;
+        Self::create::<SigmoidCooling>(
+            final_temperature,
+            initial_temperature,
+            qtd_iters,
+            qtd_iters_on_temp,
+        )
+    }
+    pub fn create<T>(
+        final_temperature: f64,
+        initial_temperature: f64,
+        qtd_iters: usize,
+        qtd_iters_on_temp: usize,
+    ) -> Self
+    where
+        T: CoolingMethod + Creatable + 'static,
+    {
         Self {
-            final_temperature: 0.0001,
-            initial_temperature: 10.0,
-            qtd_iters: 1000000,
-            qtd_iters_on_temp: 10,
-            cooling_method: Box::new(SigmoidCooling::create(10.0, 0.0001, 1000000)),
+            final_temperature,
+            initial_temperature,
+            qtd_iters,
+            qtd_iters_on_temp,
+            cooling_method: Box::new(T::create(initial_temperature, final_temperature, qtd_iters)),
         }
     }
 }
 
 impl TSA {
-    pub fn create_with_data() -> Self {
-        let data = load("data/inst_51.txt");
-        let config = TSAConfig::create_default();
-        Self::create(data, config)
-    }
-}
-
-impl TSA {
-    fn create(data: Data, config: TSAConfig) -> Self {
+    pub fn create(data: Data, config: TSAConfig) -> Self {
         let distances = Self::euclidian_distance_matrix(&data);
         let initial_solution = Self::get_initial_solution(data.len());
         let current_distance = Self::_get_solution_distance(&distances, &initial_solution);
@@ -202,11 +216,13 @@ impl TSA {
 
 #[cfg(test)]
 mod tests {
-    use crate::TSA;
+    use crate::{TSAConfig, TSA};
 
     #[test]
     fn can_create_with_51_items_as_default() {
-        let tsa = TSA::create_with_data();
+        let data = data_retrieve::load("../data/inst_51.txt");
+        let config = TSAConfig::create_default();
+        let tsa = TSA::create(data, config);
         assert_eq!(tsa.distances.len(), 51);
     }
 }

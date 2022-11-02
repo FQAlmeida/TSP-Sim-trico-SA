@@ -1,5 +1,6 @@
+use data_retrieve::load;
 use graphics_engine::{App, EventsBridge};
-use tsa_sim::TSA;
+use tsa_sim::{cooling_methods::ExpCooling, TSAConfig, TSA};
 
 // println!("{:?}", tsa.solution);
 // for _ in 0..10 {
@@ -42,11 +43,24 @@ fn handle_update(tsa: &mut TSA) -> Vec<graphics_engine::Object> {
 }
 
 fn main() {
-    let mut tsa = TSA::create_with_data();
+    let data = load("data/inst_51.txt");
+    let initial_temperature = 10.0;
+    let final_temperature = 0.0;
+    let qtd_iters = 1000000usize;
+    let qtd_iters_on_temp = 5usize;
+    let config = TSAConfig::create::<ExpCooling>(
+        final_temperature,
+        initial_temperature,
+        qtd_iters,
+        qtd_iters_on_temp,
+    );
+    let mut tsa = TSA::create(data, config);
+
     let max_x = tsa.data.iter().map(|item| item.point.x).max().unwrap();
     let max_y = tsa.data.iter().map(|item| item.point.y).max().unwrap();
     let min_x = tsa.data.iter().map(|item| item.point.x).min().unwrap();
     let min_y = tsa.data.iter().map(|item| item.point.y).min().unwrap();
+
     let mut app = App::create("TSA", max_y + min_y, max_x + min_x);
 
     let mut events = EventsBridge::create();
