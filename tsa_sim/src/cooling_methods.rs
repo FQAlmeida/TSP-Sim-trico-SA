@@ -35,11 +35,13 @@ impl CoolingMethod for SigmoidCooling {
 
 impl CoolingMethod for ExpCooling {
     fn get_next_temperature(&self, current_iter: usize) -> f64 {
+        // TODO: Review temp updates, droping too slow
         let exp = current_iter as f64 / self.qtd_iters as f64;
         let fraction = self.final_temperature / self.initial_temperature;
         let new_temp = self.initial_temperature * fraction.powf(exp);
         return new_temp;
     }
+
     fn create(initial_temperature: f64, final_temperature: f64, qtd_iters: usize) -> Self {
         ExpCooling {
             initial_temperature,

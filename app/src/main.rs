@@ -45,8 +45,8 @@ fn main() {
 
     let initial_temperature = 500.0;
     let final_temperature = 0.0000001;
-    let qtd_iters = 10_000_000usize;
-    let qtd_iters_on_temp = data.len();
+    let qtd_iters = 1_000_000_000usize;
+    let qtd_iters_on_temp = 1;
     let config = TSAConfig::<ExpCooling>::create(
         final_temperature,
         initial_temperature,
@@ -64,21 +64,24 @@ fn main() {
     let min_x = tsa.data.iter().map(|item| item.point.x).min().unwrap();
     let min_y = tsa.data.iter().map(|item| item.point.y).min().unwrap();
 
-    spawn(move || loop {
-        tsa.gen_next_solution();
-        let signal = receiver_signal.try_recv();
-        match signal {
-            Ok(msg) => {
-                if msg {
-                    sender_data.send(handle_update(&tsa)).unwrap();
-                } else {
-                    return;
+    spawn(move || {
+        loop {
+            tsa.gen_next_solution();
+            let signal = receiver_signal.try_recv();
+            match signal {
+                Ok(msg) => {
+                    if msg {
+                        sender_data.send(handle_update(&tsa)).unwrap();
+                    } else {
+                        break;
+                    }
                 }
+                Err(_) => {}
             }
-            Err(_) => {}
         }
+        println!("Sim iters {}", tsa.get_current_iter());
     });
-    
+
     let mut app = App::create("TSA", max_y + min_y, max_x + min_x);
 
     let mut events = EventsBridge::create();

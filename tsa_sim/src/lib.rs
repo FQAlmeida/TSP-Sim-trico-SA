@@ -77,7 +77,7 @@ impl<T: CoolingMethod + 'static> TSA<T> {
         self.update_temperature();
     }
 
-    fn should_change(&mut self, new_distance: f64) -> bool {
+    fn should_change(&self, new_distance: f64) -> bool {
         if self.temperature == 0.0 {
             return false;
         }
@@ -104,12 +104,10 @@ impl<T: CoolingMethod + 'static> TSA<T> {
 
         // self.cooling_method
 
-        let delta_temp = self.config.initial_temperature - self.config.final_temperature;
-        let n = self.config.qtd_iters as f64;
-        let a = delta_temp * (n + 1.0) / n;
-        let b = self.config.initial_temperature - a;
-        let new_temp = a / (self.current_iter as f64 + 1.0) + b;
-        self.temperature = new_temp;
+        self.temperature = self
+            .config
+            .cooling_method
+            .get_next_temperature(self.current_iter);
     }
 
     fn permute(solution: &Vec<usize>, qtd: usize) -> Vec<usize> {
@@ -168,8 +166,7 @@ impl<T: CoolingMethod + 'static> TSAConfig<T> {
         initial_temperature: f64,
         qtd_iters: usize,
         qtd_iters_on_temp: usize,
-    ) -> Self
-    {
+    ) -> Self {
         Self {
             final_temperature,
             initial_temperature,
@@ -218,6 +215,10 @@ impl<T: CoolingMethod + 'static> TSA<T> {
             }
         }
         return matrix;
+    }
+
+    pub fn get_current_iter(&self) -> usize {
+        self.current_iter
     }
 }
 
