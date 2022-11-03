@@ -1,7 +1,5 @@
 pub trait CoolingMethod {
     fn get_next_temperature(&self, current_iter: usize) -> f64;
-}
-pub trait Creatable {
     fn create(initial_temperature: f64, final_temperature: f64, qtd_iters: usize) -> Self;
 }
 
@@ -26,9 +24,6 @@ impl CoolingMethod for SigmoidCooling {
         let new_temp = a / (current_iter as f64 + 1.0) + b;
         return new_temp;
     }
-}
-
-impl Creatable for SigmoidCooling {
     fn create(initial_temperature: f64, final_temperature: f64, qtd_iters: usize) -> Self {
         SigmoidCooling {
             initial_temperature,
@@ -45,9 +40,6 @@ impl CoolingMethod for ExpCooling {
         let new_temp = self.initial_temperature * fraction.powf(exp);
         return new_temp;
     }
-}
-
-impl Creatable for ExpCooling {
     fn create(initial_temperature: f64, final_temperature: f64, qtd_iters: usize) -> Self {
         ExpCooling {
             initial_temperature,

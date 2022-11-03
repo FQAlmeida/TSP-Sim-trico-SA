@@ -7,7 +7,7 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::input::RenderArgs;
 use piston::window::WindowSettings;
-use piston::{Event, EventSettings, Events, RenderEvent, UpdateArgs, UpdateEvent};
+use piston::{Event, EventSettings, Events, RenderEvent, UpdateArgs, UpdateEvent, CloseArgs, CloseEvent};
 
 pub struct App {
     gl: GlGraphics,
@@ -45,6 +45,9 @@ impl EventBridge {
     }
     pub fn update_args(&self) -> Option<UpdateArgs> {
         self.event.update_args()
+    }
+    pub fn close_args(&self) -> Option<CloseArgs> {
+        self.event.close_args()
     }
 }
 
@@ -91,7 +94,7 @@ pub const BLACK: graphics::types::Color = [0.0, 0.0, 0.0, 1.0];
 
 impl App {
     pub fn create(title: &'static str, scene_height: usize, scene_width: usize) -> Self {
-        let opengl = OpenGL::V3_2;
+        let opengl = OpenGL::V4_5;
 
         // Create a Glutin window.
         let window: Window = WindowSettings::new(title, [1024, 687])

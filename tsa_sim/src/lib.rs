@@ -1,18 +1,24 @@
 pub mod cooling_methods;
 
-use cooling_methods::{CoolingMethod, Creatable, SigmoidCooling};
+use cooling_methods::{CoolingMethod, SigmoidCooling};
 use data_retrieve::{Data, DataNode, Point};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
-pub struct TSAConfig {
+pub struct TSAConfig<T>
+where
+    T: CoolingMethod + 'static,
+{
     pub initial_temperature: f64,
     pub final_temperature: f64,
     pub qtd_iters: usize,
     pub qtd_iters_on_temp: usize,
-    pub cooling_method: Box<dyn CoolingMethod>,
+    pub cooling_method: T,
 }
 
-pub struct TSA {
+pub struct TSA<T>
+where
+    T: CoolingMethod + 'static,
+{
     pub distances: Vec<Vec<f64>>,
     pub data: Vec<DataNode>,
     pub solution: Vec<usize>,
@@ -20,7 +26,7 @@ pub struct TSA {
     temperature: f64,
     iters_on_temp: usize,
     current_iter: usize,
-    config: TSAConfig,
+    config: TSAConfig<T>,
 }
 
 fn dist(a: &Point, b: &Point) -> f64 {
@@ -31,7 +37,7 @@ fn dist(a: &Point, b: &Point) -> f64 {
     sum.sqrt()
 }
 
-impl TSA {
+impl<T: CoolingMethod + 'static> TSA<T> {
     pub fn get_solution_distance(&self, solution: &Vec<usize>) -> f64 {
         return Self::_get_solution_distance(&self.distances, solution);
     }
@@ -56,7 +62,7 @@ impl TSA {
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
         let initial_size = self.solution.len();
-        let new_solution = TSA::permute(&self.solution, qtd);
+        let new_solution = TSA::<T>::permute(&self.solution, qtd);
         assert_eq!(initial_size, self.solution.len());
         assert_eq!(initial_size, new_solution.len());
 
@@ -141,40 +147,41 @@ impl TSA {
     }
 }
 
-impl TSAConfig {
+impl TSAConfig<SigmoidCooling> {
     pub fn create_default() -> Self {
         let final_temperature = 0.0001;
         let initial_temperature = 10.0;
         let qtd_iters = 1000000;
         let qtd_iters_on_temp = 10;
-        Self::create::<SigmoidCooling>(
+        Self::create(
             final_temperature,
             initial_temperature,
             qtd_iters,
             qtd_iters_on_temp,
         )
     }
-    pub fn create<T>(
+}
+
+impl<T: CoolingMethod + 'static> TSAConfig<T> {
+    pub fn create(
         final_temperature: f64,
         initial_temperature: f64,
         qtd_iters: usize,
         qtd_iters_on_temp: usize,
     ) -> Self
-    where
-        T: CoolingMethod + Creatable + 'static,
     {
         Self {
             final_temperature,
             initial_temperature,
             qtd_iters,
             qtd_iters_on_temp,
-            cooling_method: Box::new(T::create(initial_temperature, final_temperature, qtd_iters)),
+            cooling_method: T::create(initial_temperature, final_temperature, qtd_iters),
         }
     }
 }
 
-impl TSA {
-    pub fn create(data: Data, config: TSAConfig) -> Self {
+impl<T: CoolingMethod + 'static> TSA<T> {
+    pub fn create(data: Data, config: TSAConfig<T>) -> Self {
         let distances = Self::euclidian_distance_matrix(&data);
         let initial_solution = Self::get_initial_solution(data.len());
         let current_distance = Self::_get_solution_distance(&distances, &initial_solution);
@@ -192,7 +199,7 @@ impl TSA {
     }
 }
 
-impl TSA {
+impl<T: CoolingMethod + 'static> TSA<T> {
     fn get_initial_solution(len: usize) -> Vec<usize> {
         let mut solution = (0..len).collect::<Vec<usize>>();
         solution.shuffle(&mut thread_rng());

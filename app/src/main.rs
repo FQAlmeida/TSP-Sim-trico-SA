@@ -1,16 +1,14 @@
 use data_retrieve::load;
 use graphics_engine::{App, EventsBridge};
-use tsa_sim::{cooling_methods::ExpCooling, TSAConfig, TSA};
+use std::{sync::mpsc::channel, thread::spawn};
+use tsa_sim::{
+    cooling_methods::{CoolingMethod, ExpCooling},
+    TSAConfig, TSA,
+};
 
-// println!("{:?}", tsa.solution);
-// for _ in 0..10 {
-//     tsa.gen_next_solution();
-//     println!("{:?}", tsa.solution);
-// }
-
-fn handle_update(tsa: &mut TSA) -> Vec<graphics_engine::Object> {
+fn handle_update<T: CoolingMethod + 'static>(tsa: &TSA<T>) -> Vec<graphics_engine::Object> {
     let mut objects: Vec<graphics_engine::Object> = vec![];
-    tsa.gen_next_solution();
+    // tsa.gen_next_solution();
     // println!("{:?}", tsa.solution);
 
     for solution_origem_index in 0..tsa.solution.len() {
@@ -43,23 +41,42 @@ fn handle_update(tsa: &mut TSA) -> Vec<graphics_engine::Object> {
 }
 
 fn main() {
-    let data = load("data/inst_51.txt");
-    let initial_temperature = 10.0;
-    let final_temperature = 0.0;
-    let qtd_iters = 1000000usize;
+    let data = load("data/inst_100.txt");
+    let initial_temperature = 100.0;
+    let final_temperature = 0.001;
+    let qtd_iters = 1_000_000usize;
     let qtd_iters_on_temp = 5usize;
-    let config = TSAConfig::create::<ExpCooling>(
+    let config = TSAConfig::<ExpCooling>::create(
         final_temperature,
         initial_temperature,
         qtd_iters,
         qtd_iters_on_temp,
     );
+
+    let (sender_signal, receiver_signal) = channel::<bool>();
+    let (sender_data, receiver_data) = channel::<Vec<graphics_engine::Object>>();
+
     let mut tsa = TSA::create(data, config);
 
     let max_x = tsa.data.iter().map(|item| item.point.x).max().unwrap();
     let max_y = tsa.data.iter().map(|item| item.point.y).max().unwrap();
     let min_x = tsa.data.iter().map(|item| item.point.x).min().unwrap();
     let min_y = tsa.data.iter().map(|item| item.point.y).min().unwrap();
+
+    spawn(move || loop {
+        tsa.gen_next_solution();
+        let signal = receiver_signal.try_recv();
+        match signal {
+            Ok(msg) => {
+                if msg {
+                    sender_data.send(handle_update(&tsa)).unwrap();
+                } else {
+                    return;
+                }
+            }
+            Err(_) => {}
+        }
+    });
 
     let mut app = App::create("TSA", max_y + min_y, max_x + min_x);
 
@@ -70,7 +87,13 @@ fn main() {
         }
 
         if let Some(args) = e.update_args() {
-            app.update(&args, handle_update(&mut tsa));
+            sender_signal.send(true).unwrap();
+            let objects = receiver_data.recv().unwrap();
+            app.update(&args, objects);
+        }
+
+        if let Some(_) = e.close_args() {
+            sender_signal.send(false).unwrap();
         }
     }
 }
