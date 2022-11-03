@@ -42,10 +42,11 @@ fn handle_update<T: CoolingMethod + 'static>(tsa: &TSA<T>) -> Vec<graphics_engin
 
 fn main() {
     let data = load("data/inst_100.txt");
-    let initial_temperature = 100.0;
-    let final_temperature = 0.001;
-    let qtd_iters = 1_000_000usize;
-    let qtd_iters_on_temp = 5usize;
+
+    let initial_temperature = 500.0;
+    let final_temperature = 0.0000001;
+    let qtd_iters = 10_000_000usize;
+    let qtd_iters_on_temp = data.len();
     let config = TSAConfig::<ExpCooling>::create(
         final_temperature,
         initial_temperature,
@@ -77,7 +78,7 @@ fn main() {
             Err(_) => {}
         }
     });
-
+    
     let mut app = App::create("TSA", max_y + min_y, max_x + min_x);
 
     let mut events = EventsBridge::create();
