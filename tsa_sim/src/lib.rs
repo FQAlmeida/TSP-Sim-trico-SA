@@ -41,6 +41,7 @@ impl<T: CoolingMethod + 'static> TSA<T> {
     pub fn get_current_distance(&self) -> f64 {
         self.current_distance
     }
+
     pub fn get_solution_distance(&self, solution: &Vec<usize>) -> f64 {
         return Self::_get_solution_distance(&self.distances, solution);
     }
@@ -62,11 +63,12 @@ impl<T: CoolingMethod + 'static> TSA<T> {
             return;
         }
         // self.current_iter += 1;
-        dbg!(self.current_iter);
-        dbg!(self.current_distance);
+        dbg!(self.temperature);
+        // dbg!(self.current_distance);
 
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
+        // println!("{}", qtd);
         let initial_size = self.solution.len();
         let new_solution = TSA::<T>::permute(&self.solution, qtd);
         assert_eq!(initial_size, self.solution.len());
@@ -77,14 +79,25 @@ impl<T: CoolingMethod + 'static> TSA<T> {
         if new_distance < self.current_distance || self.should_change(new_distance) {
             self.current_distance = new_distance;
             self.solution = new_solution;
-            return;
+            // return;
         }
 
         self.update_temperature();
+        let itera = self.current_iter * self.config.qtd_iters_on_temp + self.iters_on_temp;
+        if itera % 1000 == 0{
+            println!(
+                "{} {} {}",
+                itera,
+                self.current_distance,
+                self.temperature
+            );
+        }
+
+
     }
 
     fn should_change(&self, new_distance: f64) -> bool {
-        if self.temperature == 0.0 {
+        if self.temperature <= self.config.final_temperature {
             return false;
         }
         let mut rng = thread_rng();
@@ -98,7 +111,7 @@ impl<T: CoolingMethod + 'static> TSA<T> {
         // println!("temp {}", self.temperature);
         // println!("-------------------------------------");
         assert!(0.0 <= prob && prob <= 1.0);
-        return value < prob;
+        return value <= prob;
     }
 
     fn update_temperature(&mut self) {

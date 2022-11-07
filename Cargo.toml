@@ -1,5 +1,5 @@
 [workspace]
-default-members = ["params_tests"]
+default-members = ["app"]
 members = [
     "app",
     "tsa_sim",
