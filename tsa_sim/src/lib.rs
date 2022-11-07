@@ -38,6 +38,9 @@ fn dist(a: &Point, b: &Point) -> f64 {
 }
 
 impl<T: CoolingMethod + 'static> TSA<T> {
+    pub fn get_current_distance(&self) -> f64 {
+        self.current_distance
+    }
     pub fn get_solution_distance(&self, solution: &Vec<usize>) -> f64 {
         return Self::_get_solution_distance(&self.distances, solution);
     }
@@ -55,9 +58,12 @@ impl<T: CoolingMethod + 'static> TSA<T> {
 
     pub fn gen_next_solution(&mut self) {
         if self.current_iter >= self.config.qtd_iters {
+            dbg!(&self.solution);
             return;
         }
-        self.current_iter += 1;
+        // self.current_iter += 1;
+        dbg!(self.current_iter);
+        dbg!(self.current_distance);
 
         let mut rng = thread_rng();
         let qtd = rng.gen_range(1usize..=5);
@@ -86,11 +92,11 @@ impl<T: CoolingMethod + 'static> TSA<T> {
         let e = std::f64::consts::E;
         let delta = new_distance - self.current_distance;
         let prob = e.powf(-delta / self.temperature);
-        println!("-------------------------------------");
-        println!("prob {}", prob);
-        println!("distance {}", delta);
-        println!("temp {}", self.temperature);
-        println!("-------------------------------------");
+        // println!("-------------------------------------");
+        // println!("prob {}", prob);
+        // println!("distance {}", delta);
+        // println!("temp {}", self.temperature);
+        // println!("-------------------------------------");
         assert!(0.0 <= prob && prob <= 1.0);
         return value < prob;
     }
@@ -101,6 +107,7 @@ impl<T: CoolingMethod + 'static> TSA<T> {
             return;
         }
         self.iters_on_temp = 0;
+        self.current_iter += 1;
 
         // self.cooling_method
 

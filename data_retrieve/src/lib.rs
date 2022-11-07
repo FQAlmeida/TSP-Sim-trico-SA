@@ -1,8 +1,10 @@
+#[derive(Debug, Clone, Copy)]
 pub struct Point {
     pub x: usize,
     pub y: usize,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct DataNode {
     pub group: u8,
     pub point: Point,
