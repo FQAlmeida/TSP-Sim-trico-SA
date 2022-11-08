@@ -2,7 +2,7 @@ use data_retrieve::load;
 use graphics_engine::{App, EventsBridge};
 use std::{sync::mpsc::channel, thread::spawn};
 use tsa_sim::{
-    cooling_methods::{CoolingMethod, ExpCooling, SigmoidCooling},
+    cooling_methods::{CoolingMethod, ExpCooling},
     TSAConfig, TSA,
 };
 
@@ -43,9 +43,9 @@ fn handle_update<T: CoolingMethod + 'static>(tsa: &TSA<T>) -> Vec<graphics_engin
 fn main() {
     let data = load("data/inst_100.txt");
 
-    let initial_temperature = 200.0;
+    let initial_temperature = 600.0;
     let final_temperature = 1E-5;
-    let qtd_iters = 2_000_000;
+    let qtd_iters = 5_000_000;
     let qtd_iters_on_temp = 10;
     let config = TSAConfig::<ExpCooling>::create(
         final_temperature,
