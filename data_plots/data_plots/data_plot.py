@@ -2,7 +2,7 @@ from matplotlib import pyplot
 from load_data import load
 
 
-data= load("../data/output.txt")
+data = load("../data/output.txt")
 
 fig, axs = pyplot.subplots(2, 1)
 
@@ -19,4 +19,4 @@ axs[1].set_xlabel("Iteraction")
 axs[1].set_ylabel("Temperature")
 
 # pyplot.show()
-pyplot.savefig("fig1.png")
+pyplot.show()

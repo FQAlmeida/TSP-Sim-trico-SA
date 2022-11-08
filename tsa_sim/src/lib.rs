@@ -83,8 +83,8 @@ impl<T: CoolingMethod + 'static> TSA<T> {
         }
 
         self.update_temperature();
-        let itera = self.current_iter * self.config.qtd_iters_on_temp + self.iters_on_temp;
-        println!("{} {} {}", itera, self.current_distance, self.temperature);
+        // let itera = self.current_iter * self.config.qtd_iters_on_temp + self.iters_on_temp;
+        // println!("{} {} {}", itera, self.current_distance, self.temperature);
     }
 
     fn should_change(&self, new_distance: f64) -> bool {

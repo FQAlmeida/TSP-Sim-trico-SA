@@ -43,9 +43,9 @@ fn handle_update<T: CoolingMethod + 'static>(tsa: &TSA<T>) -> Vec<graphics_engin
 fn main() {
     let data = load("data/inst_100.txt");
 
-    let initial_temperature = 600.0;
+    let initial_temperature = 350.0;
     let final_temperature = 1E-5;
-    let qtd_iters = 5_000_000;
+    let qtd_iters = 3_000_000;
     let qtd_iters_on_temp = 10;
     let config = TSAConfig::<ExpCooling>::create(
         final_temperature,
@@ -80,7 +80,10 @@ fn main() {
                 Err(_) => {}
             }
         }
-        println!("Sim iters {}", tsa.get_current_iter());
+        // println!("Sim iters {}", tsa.get_current_iter());
+        dbg!(tsa.get_current_iter());
+        dbg!(tsa.get_current_distance());
+        dbg!(tsa.solution);
     });
 
     let mut app = App::create("TSA", max_y + min_y, max_x + min_x);
