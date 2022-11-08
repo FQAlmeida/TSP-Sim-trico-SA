@@ -19,7 +19,7 @@ def load(fp: str) -> List[Data]:
             iteraction = int(raw_data[0])
             dist = float(raw_data[1])
             temp = float(raw_data[2])
-            if dist > 120_000:
+            if dist > 140_000:
                 continue
             data = Data(iteraction, dist, temp)
             data_list.append(data)
