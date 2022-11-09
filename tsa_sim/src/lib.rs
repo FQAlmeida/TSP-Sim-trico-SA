@@ -107,11 +107,11 @@ impl<T: CoolingMethod + 'static> TSA<T> {
 
     fn update_temperature(&mut self) {
         self.iters_on_temp += 1;
+        self.current_iter += 1;
         if self.iters_on_temp % self.config.qtd_iters_on_temp != 0 {
             return;
         }
         self.iters_on_temp = 0;
-        self.current_iter += 1;
 
         // self.cooling_method
 
