@@ -2,3 +2,5 @@
 /Cargo.lock
 output.txt
 *.pyc
+
+data/**/*

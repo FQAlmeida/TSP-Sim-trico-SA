@@ -43,10 +43,10 @@ fn handle_update<T: CoolingMethod + 'static>(tsa: &TSA<T>) -> Vec<graphics_engin
 fn main() {
     let data = load("data/inst_51.txt");
 
-    let initial_temperature = 800.0;
+    let initial_temperature = 20.0;
     let final_temperature = 1E-5;
-    let qtd_iters = 10_000_000;
-    let qtd_iters_on_temp = 5;
+    let qtd_iters = 1000000;
+    let qtd_iters_on_temp = 10;
     let config = TSAConfig::<ExpCooling>::create(
         final_temperature,
         initial_temperature,

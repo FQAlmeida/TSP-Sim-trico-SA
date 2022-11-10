@@ -10,3 +10,4 @@ data_retrieve = {path="../data_retrieve"}
 tsa_sim = {path="../tsa_sim"}
 
 threadpool = "1.8.1"
+tokio = { version = "1.21.2", features = ["full"] }

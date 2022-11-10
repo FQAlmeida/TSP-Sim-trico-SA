@@ -42,6 +42,10 @@ impl<T: CoolingMethod + 'static> TSA<T> {
         self.current_distance
     }
 
+    pub fn get_current_temperature(&self) -> f64 {
+        self.temperature
+    }
+
     pub fn get_solution_distance(&self, solution: &Vec<usize>) -> f64 {
         return Self::_get_solution_distance(&self.distances, solution);
     }
@@ -59,7 +63,7 @@ impl<T: CoolingMethod + 'static> TSA<T> {
 
     pub fn gen_next_solution(&mut self) {
         if self.current_iter >= self.config.qtd_iters {
-            dbg!(&self.solution);
+            // dbg!(&self.solution);
             return;
         }
         // self.current_iter += 1;
