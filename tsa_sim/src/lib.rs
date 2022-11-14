@@ -67,7 +67,7 @@ impl<T: CoolingMethod + 'static> TSA<T> {
             return;
         }
         // self.current_iter += 1;
-        dbg!(self.temperature);
+        // dbg!(self.temperature);
         // dbg!(self.current_distance);
 
         let mut rng = thread_rng();

@@ -24,3 +24,14 @@ def load(fp: str) -> List[Data]:
             data = Data(iteraction, dist, temp)
             data_list.append(data)
     return data_list
+
+
+def load_dist(fp: str) -> List[float]:
+    data_list = list()
+    with Path(fp).open("r") as fd:
+        lines = fd.readlines()
+        for line in lines:
+            raw_data = line.split(" ")
+            dist = float(raw_data[0])
+            data_list.append(dist)
+    return data_list
